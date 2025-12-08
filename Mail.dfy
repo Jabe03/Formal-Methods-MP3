@@ -46,12 +46,11 @@ class Message
     ensures sender == s
     ensures recipients == []
   {
-    this.id := new MessageId();
-    this.sender := s;
-    this.date := new Date();
-    this.content := "";
-    this.recipients := [];
-  // replace with your implementation
+    id := new MessageId();
+    sender := s;
+    date := new Date();
+    content := "";
+    recipients := [];
   }
 
   method setContent(c: string)
@@ -60,8 +59,7 @@ class Message
     ensures {id, date, sender} == old({id, date, sender})
     ensures recipients == old(recipients)
   {
-    this.content := c;
-  // replace with your implementation
+    content := c;
   }
 
   method setDate(d: Date)
@@ -71,7 +69,7 @@ class Message
     ensures recipients == old(recipients)
     ensures content == old(content)
   {
-    this.date := d;
+    date := d;
   // replace with your implementation
   }
  
@@ -90,7 +88,7 @@ class Message
     assert |recipients| < |recipients[..p] + [r] + recipients[p..] |;
     assert |recipients| + 1== |recipients[..p] + [r] + recipients[p..] |;
 
-    this.recipients := recipients[..p] + [r] + recipients[p..] ;
+    recipients := recipients[..p] + [r] + recipients[p..] ;
 
   // replace with your implementation
   }
@@ -158,24 +156,39 @@ class MailApp {
   // userboxList implements userBoxes 
   var userboxList: List<Mailbox>
 
+  function test():bool {
+    assert |{1,1,1}| == 1;
+    assert {1,2} * {2,3} == {2};
+    true
+  }
   // Class invariant
   ghost predicate isValid() 
+  reads this
+  ensures isValid() ==> 
+        inbox != drafts && inbox != trash && inbox != sent &&
+        drafts != trash && drafts != sent && trash != sent
+  // ensures isValid() ==> 
+  //       forall i :: 0 <= i < len(userboxList) ==> 
+  //       at(userboxList, i) !in systemBoxes()
   {
+    assert (|elements(userboxList) * systemBoxes()| == 0) ==> 
+    ( forall i :: 0 <= i < len(userboxList) ==> (at(userboxList, i) !in systemBoxes())) ;
+    
     // replace each occurrence of `true` by your formulation 
     // of the invariants described below
     //----------------------------------------------------------
     // Abstract state invariants
     //----------------------------------------------------------
     // 1. all system mailboxes (inbox, ..., sent) are distinct
-    && true
+    && (|systemBoxes()| == 4)
     // 2. none of the system mailboxes are in the set
     //    of user-defined mailboxes
-    && true
+    && (|elements(userboxList) * systemBoxes()| == 0)
     //----------------------------------------------------------
     // Abstract-to-concrete state invariants
     //----------------------------------------------------------
     // userBoxes is the set of mailboxes in userboxList
-    && true
+    && userBoxes == elements(userboxList)
   }
 
   constructor ()
