@@ -46,6 +46,11 @@ class Message
     ensures sender == s
     ensures recipients == []
   {
+    this.id := new MessageId();
+    this.sender := s;
+    this.date := new Date();
+    this.content := "";
+    this.recipients := [];
   // replace with your implementation
   }
 
@@ -55,6 +60,7 @@ class Message
     ensures {id, date, sender} == old({id, date, sender})
     ensures recipients == old(recipients)
   {
+    this.content := c;
   // replace with your implementation
   }
 
@@ -65,6 +71,7 @@ class Message
     ensures recipients == old(recipients)
     ensures content == old(content)
   {
+    this.date := d;
   // replace with your implementation
   }
  
@@ -77,7 +84,14 @@ class Message
     ensures forall i :: p < i < |recipients| ==> recipients[i] == old(recipients[i-1])
     ensures {id, date, sender} == old({id, date, sender})
     ensures content == old(content)
+    
   {
+    
+    assert |recipients| < |recipients[..p] + [r] + recipients[p..] |;
+    assert |recipients| + 1== |recipients[..p] + [r] + recipients[p..] |;
+
+    this.recipients := recipients[..p] + [r] + recipients[p..] ;
+
   // replace with your implementation
   }
 }
@@ -102,6 +116,7 @@ class Mailbox {
 
   // Adds message m to the mailbox
   method add(m: Message)
+  modifies this
   {    
     messages := { m } + messages;
   }
@@ -109,12 +124,14 @@ class Mailbox {
   // Removes message m from mailbox
   // m need not be in the mailbox 
   method remove(m: Message)
+  modifies this
   {
     messages := messages - { m };
   }
 
   // Empties the mailbox
   method empty()
+  modifies this
   {
     messages := {};
   }
