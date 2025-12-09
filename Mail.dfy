@@ -107,6 +107,8 @@ class Mailbox {
  
   // Creates an empty mailbox with name n
   constructor (n: string)
+  ensures messages == {}
+  ensures name == n
   {
     name := n;
     messages := {};
@@ -115,6 +117,7 @@ class Mailbox {
   // Adds message m to the mailbox
   method add(m: Message)
   modifies this
+  ensures messages == { m } + old(messages)
   {    
     messages := { m } + messages;
   }
@@ -123,6 +126,7 @@ class Mailbox {
   // m need not be in the mailbox 
   method remove(m: Message)
   modifies this
+  ensures messages ==  old(messages) - { m }
   {
     messages := messages - { m };
   }
@@ -130,6 +134,7 @@ class Mailbox {
   // Empties the mailbox
   method empty()
   modifies this
+  ensures messages == {}
   {
     messages := {};
   }
@@ -156,23 +161,19 @@ class MailApp {
   // userboxList implements userBoxes 
   var userboxList: List<Mailbox>
 
-  function test():bool {
-    assert |{1,1,1}| == 1;
-    assert {1,2} * {2,3} == {2};
-    true
-  }
+
   // Class invariant
   ghost predicate isValid() 
   reads this
-  ensures isValid() ==> 
-        inbox != drafts && inbox != trash && inbox != sent &&
-        drafts != trash && drafts != sent && trash != sent
+  // ensures isValid() ==> 
+  //       inbox != drafts && inbox != trash && inbox != sent &&
+  //       drafts != trash && drafts != sent && trash != sent
+  // ensures (|userBoxes * systemBoxes()| == 0) ==> 
+  //   ( forall box :: box in userBoxes ==> (box !in systemBoxes()))
   // ensures isValid() ==> 
   //       forall i :: 0 <= i < len(userboxList) ==> 
   //       at(userboxList, i) !in systemBoxes()
   {
-    assert (|elements(userboxList) * systemBoxes()| == 0) ==> 
-    ( forall i :: 0 <= i < len(userboxList) ==> (at(userboxList, i) !in systemBoxes())) ;
     
     // replace each occurrence of `true` by your formulation 
     // of the invariants described below
@@ -183,7 +184,7 @@ class MailApp {
     && (|systemBoxes()| == 4)
     // 2. none of the system mailboxes are in the set
     //    of user-defined mailboxes
-    && (|elements(userboxList) * systemBoxes()| == 0)
+    && (|userBoxes * systemBoxes()| == 0)
     //----------------------------------------------------------
     // Abstract-to-concrete state invariants
     //----------------------------------------------------------
@@ -192,26 +193,49 @@ class MailApp {
   }
 
   constructor ()
+  ensures inbox.name == "Inbox"
+  ensures drafts.name == "Drafts"
+  ensures trash.name == "Trash"
+  ensures sent.name == "Sent"
+  ensures inbox.messages == drafts.messages == 
+          trash.messages == sent.messages == {}
+  ensures userBoxes == {}
+  ensures isValid()
   {
     inbox := new Mailbox("Inbox");
     drafts := new Mailbox("Drafts");
     trash := new Mailbox("Trash");
     sent := new Mailbox("Sent");
     userboxList := Nil;
+    userBoxes := {};
   }
 
   // Deletes user-defined mailbox mb
   method deleteMailbox(mb: Mailbox)
+  modifies this
+  requires isValid()
+  ensures isValid()
+  ensures  old(userBoxes) - {mb} ==userBoxes
   {
     userboxList := remove(userboxList, mb);
+    userBoxes := userBoxes - {mb};
   }
 
   // Adds a new mailbox with name n to set of user-defined mailboxes
   // provided that no user-defined mailbox has name n already
   method newMailbox(n: string)
+    modifies this
+    requires isValid()
+    requires forall m :: m in userBoxes ==> m.name != n
+    ensures isValid()
+    ensures  |old(userBoxes)| + 1 == |userBoxes|
+    ensures  exists mb: Mailbox :: mb in userBoxes &&
+                                   mb.name == n &&
+                                   mb.messages == {} 
   {
     var mb := new Mailbox(n);
     userboxList := Cons(mb, userboxList);
+    userBoxes := userBoxes + {mb};
   }
 
   // Adds a new message with sender s to the drafts mailbox
