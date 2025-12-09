@@ -1,4 +1,5 @@
 
+
 /*===============================================
   CS:5810 Formal Methods in Software Engineering
   Fall 2025
@@ -38,6 +39,16 @@ module Map {
   ghost function entries<T(!new)>(m: Map<T>): set<Entry<T>>
   { L.elements(m) }
 
+
+  function keys2<T(!new)>(m: List<Entry<T>>): set<int>
+    decreases m
+    ensures isEmpty(m) <==> keys2(m) == {}
+  {
+    match m
+    case Nil => {}
+    case Cons((k, v), t) => {k} + keys2(t)
+  }
+
   // A map m is valid iff, as a list, it contains no repeated elements and
   // every key in m has exactly one associated value (no contract needed) 
   ghost predicate isValid<T(!new)>(m: Map<T>)
@@ -47,7 +58,7 @@ module Map {
   case Cons(e, Nil) =>
     true
   case Cons((k,_), t) =>
-    isValid(t) && k !in keys(t)
+    isValid(t) && k !in keys2(t)
   }
 
   // For every value type T, emptyMap<T>() is 
@@ -75,6 +86,7 @@ module Map {
   // keys(m) is the set of keys in m's entries
   function keys<T(!new)>(m: Map<T>): set<int>
     decreases m
+    requires isValid(m)
     ensures isEmpty(m) <==> keys(m) == {}
   {
     match m
@@ -104,6 +116,7 @@ module Map {
     requires isValid(m)
     ensures isValid(m)
     ensures (get(m,k) == None) <==> k !in keys(m)
+    ensures (get(m,k) == None) <==> k !in keys2(m)
     ensures (get(m,k) != None) ==> (k, (get(m,k)).val) in entries(m)
   {
     match m
@@ -120,14 +133,14 @@ module Map {
   function remove<T(!new)>(m: Map<T>, k: int): Map<T>
     requires isValid(m)
     ensures isValid(remove(m,k))
-
-    ensures keys(remove(m,k)) == keys(m) - {k}
     ensures get(remove(m,k), k) == None
     ensures forall q: int :: q != k ==> get(remove(m,k), q) == get(m,q)
 
     ensures k !in keys(m) ==> size(remove(m,k)) == size(m) 
     ensures k in keys(m) ==> size(remove(m,k)) == size(m) -1
     ensures values(remove(m,k)) <= values(m)
+
+    ensures keys(remove(m,k)) == keys(m) - {k}
   {
     match m
     case Nil => Nil
