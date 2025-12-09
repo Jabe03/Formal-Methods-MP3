@@ -223,6 +223,10 @@ class MailApp {
   requires isValid()
   ensures isValid()
   ensures  old(userBoxes) - {mb} ==userBoxes
+  ensures drafts == old(drafts)
+  ensures trash == old(trash)
+  ensures sent == old(sent)
+  ensures inbox == old(inbox)
   {
     userboxList := remove(userboxList, mb);
     userBoxes := userBoxes - {mb};
@@ -239,6 +243,11 @@ class MailApp {
     ensures  exists mb: Mailbox :: mb in userBoxes &&
                                    mb.name == n &&
                                    mb.messages == {} 
+    //ensures userboxList ==  Cons(mb, userboxList)
+    ensures drafts == old(drafts)
+    ensures trash == old(trash)
+    ensures sent == old(sent)
+    ensures inbox == old(inbox)
   {
     var mb := new Mailbox(n);
     userboxList := Cons(mb, userboxList);
@@ -247,13 +256,15 @@ class MailApp {
 
   // Adds a new message with sender s to the drafts mailbox
   method newMessage(s: Address)
-  modifies drafts
   requires isValid()
   ensures isValid()
-   ensures exists nw: Message ::  nw in drafts.messages && nw.sender == s
+  ensures exists nw: Message ::  nw in drafts.messages && nw.sender == s
+  ensures forall m :: m in old(drafts).messages ==> m in drafts.messages
+  ensures exists m :: drafts.messages == old(drafts.messages) + {m} 
+  ensures drafts == old(drafts)
+  modifies drafts
   {
     var m := new Message(s);
-    assert m.sender == s;
     drafts.add(m);
   }
 
@@ -261,6 +272,9 @@ class MailApp {
   method moveMessage (m: Message, mb1: Mailbox, mb2: Mailbox)
   requires isValid()
   ensures isValid()
+  modifies mb1, mb2
+  requires mb1 != mb2
+  ensures mb1.messages == old(mb1.messages) - {m}
   {
     mb1.remove(m);
     mb2.add(m);
@@ -287,6 +301,8 @@ class MailApp {
   method emptyTrash ()
   requires isValid()
   ensures isValid()
+  modifies trash
+  ensures trash.messages == {}  
   {
     trash.empty();
   }
