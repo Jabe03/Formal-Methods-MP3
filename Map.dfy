@@ -117,7 +117,9 @@ module Map {
     ensures isValid(m)
     ensures (get(m,k) == None) <==> k !in keys(m)
     ensures (get(m,k) == None) <==> k !in keys2(m)
-    ensures (get(m,k) != None) ==> (k, (get(m,k)).val) in entries(m)
+    
+    ensures (get(m,k) != None) ==> 
+    (k, (get(m,k)).val) in entries(m)
   {
     match m
     case Nil => None
@@ -161,6 +163,15 @@ module Map {
     ensures keys(put(m,k,v)) == keys(m) + {k}
     ensures v in values(put(m, k, v))
     ensures (k, v) in entries(put(m, k,v))
+    ensures entries(put(m,k,v)) - {(k,v)} <= entries(m)
+    // ensures (get(m,k) != None) ==> 
+    //     (k, (get(m,k)).val) in entries(m) 
+    // ensures (get(m,k) != None)==>
+    //     entries(put(m,k,v)) - {(k,v)} == 
+    //     (entries(m) - {(k, get(m,k).val)})
+    // ensures get(m,k) == None ==> 
+    //     entries(put(m,k,v)) - {(k,v)} == (entries(m))
+
 
     ensures get(put(m,k,v), k) == Some(v)
     ensures forall q :: q != k ==> get(put(m,k,v), q) == get(m, q)
