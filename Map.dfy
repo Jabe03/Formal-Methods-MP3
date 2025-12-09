@@ -40,7 +40,7 @@ module Map {
   { L.elements(m) }
 
 
-  function keys2<T(!new)>(m: List<Entry<T>>): set<int>
+  ghost function keys2<T(!new)>(m: List<Entry<T>>): set<int>
     decreases m
     ensures isEmpty(m) <==> keys2(m) == {}
   {
