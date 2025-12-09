@@ -65,6 +65,7 @@ module Map {
   // the empty map of elements of type T
   function emptyMap<T(!new)>(): Map<T> 
     ensures isValid(emptyMap<T>())
+    ensures isEmpty(emptyMap<T>())
   { Nil }
 
   // isEmpty(m) is true iff m has no entries 
@@ -77,6 +78,7 @@ module Map {
     requires isValid(m)
     ensures isEmpty(m) <==> size(m) == 0
     ensures !isEmpty(m) ==> size(m) > 0
+    ensures size(m) == |keys(m)|
   {
     match m
     case Nil => 0
@@ -88,6 +90,7 @@ module Map {
     decreases m
     requires isValid(m)
     ensures isEmpty(m) <==> keys(m) == {}
+    ensures keys(m) == keys2(m)
   {
     match m
     case Nil => {}
