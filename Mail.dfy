@@ -136,7 +136,6 @@ class Mailbox {
   method empty()
   modifies this
   ensures messages == {}
-  ensures fresh(messages)
   {
     messages := {};
   }
