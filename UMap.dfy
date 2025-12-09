@@ -18,33 +18,59 @@ class UMap<T(!new,==)> {
 
   // this.entrySet() is the set of all the entries in the map 
   ghost function entrySet(): set<Entry<T>>
+    reads this
 
   // this.keySet() is the set of all the keys in the map 
   ghost function keySet(): set<int>
+    reads this
+  {
+    M.keys(entries)
+  }
 
   // this.valueSet() is the set of all the values in the map 
   ghost function valueSet(): set<T>
+    reads this
+  {
+    M.values(entries)
+  }
 
   // A map m is valid iff it contains no repeated elements and
   // every key in m has exactly one associated value (no requires or ensures needed) 
   ghost predicate isValid() 
+    reads this
+  {
+    M.isValid(entries)
+  }
 
   // this.hasValue(k) is true iff key k as a value in the map
   ghost predicate hasValue(k: int)
+    reads this
 
   // this.isEmpty() is true iff the map contains no entries
   predicate isEmpty() 
+    reads this
+
 
   // constructor returns a (new) map with an empty set of entries.
   constructor ()
+    modifies this 
+    ensures isValid()
+    ensures entrySet() == {}
+    ensures keySet() == {}
+  {
+
+  }
 
   // this.size() returns the number of entries in the map
   method size() returns (s: nat) 
+    ensures s == |entrySet()|
+    reads this
 
   // this.get(k) returns the value associated to key k in the map, if any.
   // More precisely, it returns Some(v) if k has an associated value v,
   // and returns None otherwhise.
   method get(k: int) returns (vo: Option<T>)
+
 
   // this.put(k, v) changes the map so that key k is associated with value v.
   // Then it returns the value previously associated to k in the map, if any.
