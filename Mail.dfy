@@ -4,7 +4,7 @@
 
   Mini Project 3 - Part B
 
-  Your name(s): 
+  Your name(s): Mitchell Piehl and Josh Bergthold
   ===============================================*/
 
 include "List.dfy"
@@ -256,13 +256,14 @@ class MailApp {
 
   // Adds a new message with sender s to the drafts mailbox
   method newMessage(s: Address)
-  requires isValid()
-  ensures isValid()
-  ensures exists nw: Message ::  nw in drafts.messages && nw.sender == s
-  ensures forall m :: m in old(drafts).messages ==> m in drafts.messages
-  ensures exists m :: drafts.messages == old(drafts.messages) + {m} 
-  ensures drafts == old(drafts)
-  modifies drafts
+    modifies drafts
+    requires isValid()
+    ensures isValid()
+    ensures exists nw: Message ::  nw in drafts.messages && nw.sender == s
+
+    ensures forall m :: m in old(drafts).messages ==> m in drafts.messages
+    ensures exists m :: drafts.messages == old(drafts.messages) + {m}
+    ensures drafts == old(drafts)
   {
     var m := new Message(s);
     drafts.add(m);
@@ -270,11 +271,12 @@ class MailApp {
 
   // Moves message m from mailbox mb1 to a different mailbox mb2
   method moveMessage (m: Message, mb1: Mailbox, mb2: Mailbox)
-  requires isValid()
-  ensures isValid()
-  modifies mb1, mb2
-  requires mb1 != mb2
-  ensures mb1.messages == old(mb1.messages) - {m}
+    modifies mb1, mb2
+    requires mb1 != mb2
+    requires isValid()
+    ensures isValid()
+    ensures mb1.messages == old(mb1.messages) - {m}
+    ensures mb2.messages == old(mb2.messages) + {m}
   {
     mb1.remove(m);
     mb2.add(m);
@@ -283,26 +285,34 @@ class MailApp {
   // Moves message m from non-null mailbox mb to the trash mailbox
   // provided that mb is not the trash mailbox
   method deleteMessage (m: Message, mb: Mailbox)
-  requires isValid()
-  ensures isValid()
+    modifies mb, trash
+    requires mb != trash
+    requires isValid()
+    ensures isValid()
+    ensures mb.messages == old(mb.messages) - {m}
+    ensures trash.messages == old(trash.messages) + {m}
   {
     moveMessage(m, mb, trash);
   }
 
   // Moves message m from the drafts mailbox to the sent mailbox
   method sendMessage(m: Message)
-  requires isValid()
-  ensures isValid()
+    modifies drafts, sent
+    requires isValid()
+    requires m in drafts.messages
+    ensures isValid()
+    ensures drafts.messages == old(drafts.messages) - {m}
+    ensures sent.messages == old(sent.messages) + {m}
   {
     moveMessage(m, drafts, sent);
   }
 
   // Empties the trash mailbox
   method emptyTrash ()
-  requires isValid()
-  ensures isValid()
-  modifies trash
-  ensures trash.messages == {}  
+    modifies trash
+    requires isValid()
+    ensures isValid()
+    ensures trash.messages == {}
   {
     trash.empty();
   }
