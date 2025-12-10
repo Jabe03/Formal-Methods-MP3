@@ -19,6 +19,8 @@ class UMap<T(!new,==)> {
   // this.entrySet() is the set of all the entries in the map 
   ghost function entrySet(): set<Entry<T>>
     reads this
+    requires isValid()
+    ensures entrySet() == M.entries(entries)
     {
       L.elements(entries)
     }
@@ -28,7 +30,7 @@ class UMap<T(!new,==)> {
     reads this
     requires isValid()
     ensures isEmpty() <==> keySet() == {}
-
+    ensures keySet() == M.keys(entries)
   {
     M.keys(entries)
   }
@@ -38,6 +40,8 @@ class UMap<T(!new,==)> {
     reads this
     requires isValid()
     ensures isEmpty() <==> valueSet() == {}
+    ensures valueSet() == M.values(entries)
+    ensures |valueSet()| <= |keySet()|
   {
     M.values(entries)
   }
@@ -73,6 +77,8 @@ class UMap<T(!new,==)> {
     ensures isValid()
     ensures entrySet() == {}
     ensures keySet() == {}
+    ensures valueSet() == {}
+    ensures isEmpty()
   {
     entries := M.emptyMap();
   }
@@ -82,6 +88,8 @@ class UMap<T(!new,==)> {
     requires isValid()
     ensures isEmpty() <==> s == 0
     ensures !isEmpty() ==> s > 0
+    ensures s == |keySet()|
+    ensures s == M.size(entries)
     {
       s := M.size(entries);
     }
@@ -93,9 +101,9 @@ class UMap<T(!new,==)> {
    requires isValid()
     ensures isValid()
     ensures (vo ==  None) <==> k !in keySet()
-    // ensures (vo == None) <==> k !in keys2(m)
-    ensures (vo != None) ==> (k, vo.val) in entrySet()
-  
+    ensures vo == M.get(entries,k)
+    ensures (vo != None) ==> (k, (vo).val) in entrySet()
+    ensures forall v:T :: vo == Some(v) ==> (k,v) in entrySet()
   {
     vo := M.get(entries, k);
   }
@@ -106,23 +114,17 @@ class UMap<T(!new,==)> {
   // More precisely, it returns Some(v) if k had an associated value v,
   // and returns None otherwhise.
   method put(k: int, v: T) returns (old_vo: Option<T>) 
-  requires isValid()
-  ensures isValid()
-  modifies this
-  ensures keySet() == old(keySet()) + {k}
-  ensures v in valueSet()
-  ensures (k, v) in entrySet()
-  ensures old_vo != None ==> (entrySet() - {(k,v)} 
-        <= old(entrySet()) )
-  ensures old_vo != None ==> (k, old_vo.val) in old(entrySet())
-  
+    requires isValid()
+    ensures isValid()
+    modifies this
+    ensures keySet() == old(keySet()) + {k}
+    ensures valueSet() <= old(valueSet()) + {v}
+    ensures v in valueSet()
 
-    // ensures forall q :: q != k ==> 
-    //     get(put(m,k,v), q) == get(m, q)
+    ensures old_vo == old(M.get(entries, k))
+    ensures old_vo != None ==> (k, old_vo.val) in old(entrySet())
 
-    // ensures k in old(keySet()) ==> size(entrySet) == size(m) 
-    // ensures k !in keys(m) ==> size(put(m,k,v)) == size(m) + 1
-    // ensures values(put(m, k, v)) <= values(m) + {v}
+    ensures entries == M.put(old(entries), k, v)
     {
       old_vo := get(k);
       entries := M.put(entries,k,v);
@@ -133,12 +135,19 @@ class UMap<T(!new,==)> {
   // More precisely, it returns Some(v) if k had an associated value v,
   // and returns None otherwhise.
   method remove(k: int) returns (vo: Option<T>)
-  requires isValid()
-  ensures isValid() 
-  modifies this
-  ensures keySet() == old(keySet()) - {k}
-  ensures vo != None ==> (k, vo.val) in old(entrySet())
-  ensures vo == None ==> k !in old(keySet())
+    requires isValid()
+    ensures isValid()
+    modifies this
+
+    ensures keySet() == old(keySet()) - {k}
+    ensures k in keySet() ==> valueSet() < old(valueSet())
+
+    ensures vo == old(M.get(entries, k))
+    ensures vo != None ==> (k, vo.val) in old(entrySet())
+    ensures vo == None ==> (k) !in old(keySet())
+
+    ensures M.get(entries, k) == None
+    ensures forall q:int :: q != k ==> M.get(entries, q) == M.get(old(entries), q)
   {
     vo := get(k);
     entries := M.remove(entries, k);
