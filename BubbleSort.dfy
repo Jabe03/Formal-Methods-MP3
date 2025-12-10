@@ -27,28 +27,31 @@ method BubbleSort(a: array<int>)
   // a is a permutation of old(a) (no elements are added or removed)
   ensures multiset(old(a[..])) == multiset(a[..])
 {
+  ghost var old_a_mset: multiset<int> := multiset(a[..]);
   var i := a.Length - 1;
+
   while i > 0
   decreases i
   invariant i < a.Length
-  // && isSorted(a, a.Length - 1, a.Length)
-  && isSorted(a, i+1, a.Length)
-  // && ((i == a.Length - 2) ==> isSorted(a, a.Length - 2, a.Length))
-  && (a.Length > i+1 ==> (forall k :: 0 <= k < (i+1)  ==> a[i+1] >= a[k] ))
+  && isSorted(a, i+1, a.Length) //sorted condition
+  && (a.Length > i+1 ==> (forall k :: 0 <= k < (i+1)  ==> a[i+1] >= a[k] )) //frame
+  &&  old_a_mset == multiset(a[..]) //permutation condition
   {
     var j := 0;
     while j < i
     decreases i - j
-    invariant j < a.Length && (forall k :: 0 <= k < j  ==> a[j] >= a[k] ) && j <= i
+    invariant j < a.Length && (forall k :: 0 <= k < j  ==> a[j] >= a[k] ) //sorted condition
+    && j <= i 
+    && isSorted(a, i+1, a.Length) //frame
+    && (a.Length > i+1 ==> (forall k :: 0 <= k < (i+1)  ==> a[i+1] >= a[k] )) //frame 
+    &&  old_a_mset == multiset(a[..]) //permutation condition
     {
+      
       if a[j] > a[j + 1] {
          a[j], a[j + 1] := a[j + 1], a[j];
       }
       j := j + 1;
-    } 
-    assert j == i;
-    assert i < a.Length && (forall k :: 0 <= k < i  ==> a[i] >= a[k] );   
+    }  
     i := i - 1;
   }
-  assert a.Length > 2 ==> isSorted(a, a.Length - 2, a.Length);
 }
