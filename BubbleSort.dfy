@@ -31,9 +31,10 @@ method BubbleSort(a: array<int>)
   while i > 0
   decreases i
   invariant i < a.Length
-  && (forall k :: 0 <= i < k < a.Length  ==> a[k] >= a[i] )
+  // && isSorted(a, a.Length - 1, a.Length)
+  && isSorted(a, i+1, a.Length)
+  // && ((i == a.Length - 2) ==> isSorted(a, a.Length - 2, a.Length))
   && (a.Length > i+1 ==> (forall k :: 0 <= k < (i+1)  ==> a[i+1] >= a[k] ))
-
   {
     var j := 0;
     while j < i
@@ -49,5 +50,5 @@ method BubbleSort(a: array<int>)
     assert i < a.Length && (forall k :: 0 <= k < i  ==> a[i] >= a[k] );   
     i := i - 1;
   }
-  assert i >= -1;
+  assert a.Length > 2 ==> isSorted(a, a.Length - 2, a.Length);
 }
