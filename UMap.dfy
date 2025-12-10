@@ -4,7 +4,7 @@
 
   Mini Project 3 - Part C
 
-  Your name(s): 
+  Your name(s): Mitchell Piehl and Joshua Bergthold
   ===============================================*/
 
 include "Option.dfy"

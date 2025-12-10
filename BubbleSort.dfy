@@ -5,7 +5,7 @@
 
   Mini Project 3 - Part D
 
-  Your name(s): Example solution
+  Your name(s): Mitchell Piehl and Joshua Bergthold
   ===============================================*/
 
 // Auxiliary predicate
